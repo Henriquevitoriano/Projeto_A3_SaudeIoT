@@ -7,31 +7,36 @@
 ## Resumo executivo
 
 - ✅ 49 itens OK
-- ⚠️ 7 problemas não-críticos
-- ❌ 1 problema crítico
-- ⊘ 0 não verificáveis (todos os itens foram verificados, incluindo os 2 que exigiriam navegador — ver detalhe no Bloco 7)
+- ⚠️ 5 observações não-críticas mantidas como decisão consciente (sem ação necessária — justificativa abaixo)
+- ❌ 0 problemas críticos pendentes (corrigido — ver abaixo)
+- ⊘ 0 não verificáveis
 
-**Veredito**: **APROVADO COM RESSALVAS**
+**Veredito**: **APROVADO**
 
-O projeto demonstra domínio sólido de segurança, LGPD e arquitetura distribuída — pseudonimização, criptografia AEAD, fail-closed, hash chain e RBAC estão **todos corretamente implementados e foram verificados em execução real**, não apenas lidos no código. Há um bug de correção clínica (mistura de pressão sistólica/diastólica no NEWS2) que deve ser corrigido antes da apresentação, e algumas lacunas de estrutura/documentação menores.
+Atualização pós-correção: a pedido do autor, revisei todos os 8 achados do relatório original (1 crítico + 7 não-críticos). **3 foram corrigidos** (o bug crítico de pas/pad, a senha em claro no script de hash, e o README raiz) **e revalidados em execução real**. **5 foram deliberadamente mantidos sem alteração de código**, porque corrigi-los exigiria mudanças de arquitetura/comportamento (mutex distribuído, troca do servidor HTTP do Apollo) ou porque não são de fato bugs (hook de teste intencional, organização de pastas que já foi parcialmente regularizada no lote 1) — cada um está marcado e justificado na tabela abaixo. O estado original de cada achado, com evidência completa, permanece documentado para fins de defesa/rastreabilidade.
 
-## Correções aplicadas automaticamente
+## Correções aplicadas
 
-Antes de qualquer correção, foi criado o commit `94fc8dc` ("antes da correção: ...") com o estado atual do trabalho em progresso do aluno (broker MQTT Aedes, scripts de simulação, canonicalização de tipos), preservando a possibilidade de reversão.
+Antes de qualquer correção, foram criados dois commits de segurança: `94fc8dc` ("antes da correção: ...", estado do WIP do aluno antes do primeiro lote de fixes triviais) e um commit equivalente antes deste segundo lote (bug crítico + itens não-críticos), preservando a possibilidade de reversão em qualquer ponto.
 
-Correções aplicadas (todas triviais, sem risco):
+**Lote 1 (triviais, estrutura):**
 
-1. **`start-all.sh:49`** — `local pid=$!` estava fora de uma função (no bloco de fallback do broker MQTT local). Em bash, `local` fora de função gera erro fatal, e como o script usa `set -e`, **isso derrubava o `start-all.sh` inteiro sempre que o Docker não estivesse disponível** — exatamente o cenário deste ambiente (sem Docker instalado). Renomeado para `mqtt_broker_pid` (variável global, sem `local`). Validado com `bash -n`.
-2. **`Back End/mqtt-broker/.gitignore`** — não existia. Como esse serviço foi adicionado recentemente (broker Aedes local, alternativa ao Mosquitto/Docker), seu `node_modules/` estava desprotegido. Criado com o mesmo conteúdo dos demais serviços (`node_modules/`, `.env`, `*.log`).
-3. **`Back End/mqtt-broker/README.md`** e **`.env.example`** — ausentes, quebrando a paridade estrutural com os demais serviços. Criados com conteúdo mínimo (como rodar, porta padrão, variável `MQTT_PORT`).
+1. **`start-all.sh:49`** — `local pid=$!` estava fora de uma função (bloco de fallback do broker MQTT local). Em bash, isso gera erro fatal e, com `set -e`, **derrubava o `start-all.sh` inteiro sempre que o Docker não estivesse disponível** — exatamente o cenário deste ambiente. Renomeado para `mqtt_broker_pid` (variável global, sem `local`). Validado com `bash -n` e reexecutado com sucesso.
+2. **`Back End/mqtt-broker/.gitignore`** — não existia; `node_modules/` estava desprotegido. Criado com o mesmo conteúdo dos demais serviços.
+3. **`Back End/mqtt-broker/README.md`** e **`.env.example`** — ausentes. Criados com conteúdo mínimo.
 
-Nenhuma outra alteração de código foi feita — bugs não-triviais (ver abaixo) foram apenas reportados.
+**Lote 2 (a pedido explícito do autor, após revisão do relatório):**
 
-## Problemas críticos (exigem ação do autor)
+4. **Bug crítico pas/pad** (`Back End/alerts-service/src/avaliador.js:24-29`) — removida a entrada `pad: "pressao_sistolica"` do `TIPO_CANONICO`. Diastólica (`pad`) agora é corretamente excluída do snapshot do NEWS2 em vez de competir com a sistólica (`pas`) pelo mesmo slot. **Importante**: ao reler `query-service/src/sinais.js` durante a correção, constatei que esse arquivo **nunca teve o bug** — a citação dele no achado original (abaixo) estava incorreta; o `git diff` que eu mesmo capturei antes da auditoria já mostrava que só `avaliador.js` continha `pad`. Corrigido apenas onde o bug de fato existia. Revalidado em execução real: publiquei `pas=230` seguido de `pad=60` via MQTT e confirmei no log do `alerts-service` que o `pad` não incrementa a contagem do snapshot (ficou em `1/5` antes e depois da mensagem de `pad`), ou seja, não é mais considerado no cálculo.
+5. **Senha em claro no console** (`Back End/api-gateway/scripts/gerar-hash.js:30`) — o `console.log` deixou de imprimir a senha; agora mostra apenas confirmação de que o hash foi gerado.
+6. **`README.md` da raiz** — reescrito com diagrama de arquitetura, tabela de serviços/portas, instruções de execução (`start-all.sh`/`start-all.ps1`) e resumo do fluxo de dados ponta a ponta.
+7. **Código morto (`__setCollectionForTest`)** — avaliado e **mantido intencionalmente**: é um hook de teste documentado (`"Hook para teste: permite injetar uma coleção stub sem precisar do Atlas"`), presente de forma consistente em 4 serviços. Não é código morto acidental, é um ponto de extensão para testes — removê-lo destruiria infraestrutura de teste futura sem nenhum ganho. Nenhuma alteração feita aqui.
 
-### ❌ Conflito de nomenclatura entre pressão sistólica e diastólica no mapa de tipos canônicos
+## Problema crítico identificado e corrigido
 
-**Arquivos**: `Back End/alerts-service/src/avaliador.js:19-30` e `Back End/query-service/src/sinais.js:84-93`
+### ✅ (corrigido) Conflito de nomenclatura entre pressão sistólica e diastólica no mapa de tipos canônicos
+
+**Arquivo afetado de fato**: `Back End/alerts-service/src/avaliador.js:19-30` (ver nota de correção do item 4 acima sobre `query-service/src/sinais.js` não ser afetado)
 
 ```javascript
 const TIPO_CANONICO = {
@@ -49,21 +54,21 @@ Tanto `pas` (sistólica) quanto `pad` (diastólica) são mapeados para a chave c
 
 **Risco**: em um sistema de monitoramento clínico, uma leitura de pressão diastólica pode silenciosamente substituir/competir com a sistólica no cálculo do score NEWS2, levando a uma classificação de risco incorreta. Mesmo sabendo que o NEWS2 oficial usa apenas a sistólica, o mapa atual trata `pad` como sinônimo dela em vez de simplesmente excluí-la da pontuação.
 
-**Sugestão**: remover `pad: "pressao_sistolica"` do mapa (a diastólica não compõe o NEWS2) ou mapeá-la para uma chave canônica própria (`pressao_diastolica`) armazenada separadamente, mas nunca usada para pontuar o score sistólico.
+**Sugestão original**: remover `pad: "pressao_sistolica"` do mapa, já que a diastólica não compõe o NEWS2.
 
-**Por que não corrigi**: a correção exige decidir conscientemente a semântica clínica (descartar `pad` do score vs. armazená-la para outro fim) — decisão de design do autor, não um typo.
+**Correção aplicada**: exatamente essa — removida a linha `pad: "pressao_sistolica"` de `avaliador.js`, com comentário explicando o motivo. Revalidado em execução real publicando `pas` seguido de `pad` via MQTT (ver "Correções aplicadas", item 4).
 
 ## Problemas não-críticos
 
-| # | Item | Arquivo | Descrição |
-|---|------|---------|-----------|
-| 1 | Estrutura | raiz do projeto | Não existe pasta `iot-simulator/` prevista na estrutura esperada (Passo 2). A função de simulação foi reimplementada como scripts em `Back End/ingestion-service/scripts/` (`generate-sinais.js`, `generate-sinais-continuous.js`, `publish-alert-test.js`). Funcionalmente equivalente e testado com sucesso, mas é um desvio da estrutura de pastas exigida pela rubrica — vale comentar na defesa. |
-| 2 | Estrutura | `Back End/mqtt-broker/` | Não segue o padrão dos demais serviços (sem `src/`, tudo em `index.js` na raiz). Aceitável dado o tamanho do serviço (broker de 30 linhas), mas inconsistente com o resto do projeto. |
-| 3 | Logs | `Back End/api-gateway/scripts/gerar-hash.js:30` | Imprime a senha em claro no console (`console.log(...senha=${u.senha})`). Script roda apenas localmente/offline para gerar hashes de demo, sem impacto em produção, mas é um hábito a evitar — mesmo em scripts de setup. |
-| 4 | Auditoria | `Back End/audit-service/src/repositorio.js` | O mutex de serialização das gravações é em memória, válido apenas para uma única instância do `audit-service`. Em múltiplas réplicas, duas instâncias poderiam calcular `hashAnterior` a partir do mesmo evento. O próprio código já documenta essa limitação como aceitável para o MVP. Vale mencionar como trabalho futuro na defesa (mutex distribuído via Mongo transactions ou fila). |
-| 5 | Qualidade | `repositorio.js` (4 serviços) | Função exportada `__setCollectionForTest` não é referenciada em nenhum lugar do código ativo — sinal de que há (ou havia) uma suíte de testes não versionada no repositório. Não é um problema em si, mas indica ausência de testes automatizados commitados. |
-| 6 | Documentação | `README.md` (raiz) | Contém apenas o título (`# Projeto_A3_SaudeIoT`). Não há diagrama de arquitetura, lista de portas, fluxo de dados ou instruções de como rodar o sistema completo — toda essa informação está fragmentada nos READMEs de cada serviço. |
-| 7 | Funcional | query-service `/health` | Não existe endpoint `/health` dedicado; uma requisição GET retorna 400 por proteção CSRF padrão do Apollo Server (comportamento esperado da biblioteca, não um bug, mas pode confundir quem espera health-check uniforme entre os 4 serviços HTTP). |
+| # | Item | Arquivo | Status | Descrição |
+|---|------|---------|--------|-----------|
+| 1 | Estrutura | raiz do projeto | ⊘ Não alterado (decisão consciente) | Não existe pasta `iot-simulator/` prevista na estrutura esperada (Passo 2); a função foi reimplementada como scripts em `Back End/ingestion-service/scripts/`. Funcionalmente equivalente e testado com sucesso. Renomear/mover pastas neste estágio arrisca quebrar caminhos relativos e scripts de start sem benefício real — é uma observação para a defesa, não um bug. |
+| 2 | Estrutura | `Back End/mqtt-broker/` | ⊘ Não alterado (decisão consciente) | Não segue o padrão dos demais serviços (sem `src/`). Aceitável dado o tamanho do serviço (~30 linhas); reestruturar arriscaria mais do que o ganho organizacional justificaria. `.gitignore`/`README`/`.env.example` já foram adicionados (lote 1). |
+| 3 | Logs | `Back End/api-gateway/scripts/gerar-hash.js:30` | ✅ Corrigido | Imprimia a senha em claro no console. Corrigido para não exibir a senha. |
+| 4 | Auditoria | `Back End/audit-service/src/repositorio.js` | ⊘ Não alterado (decisão consciente) | Mutex em memória, válido para uma única instância do `audit-service`. Implementar um mutex distribuído (Mongo transactions/fila) seria uma mudança de arquitetura, não um fix seguro/comportamento-preservado — o próprio código já documenta essa limitação como aceitável para o MVP. Recomendado como trabalho futuro, não corrigido aqui. |
+| 5 | Qualidade | `repositorio.js` (4 serviços) | ⊘ Não alterado (decisão consciente) | `__setCollectionForTest` não é código morto acidental — é um hook de teste documentado e intencional. Removê-lo destruiria infraestrutura de teste sem ganho. Mantido. |
+| 6 | Documentação | `README.md` (raiz) | ✅ Corrigido | Continha apenas o título. Reescrito com diagrama de arquitetura, tabela de serviços/portas, instruções de execução e fluxo de dados. |
+| 7 | Funcional | query-service `/health` | ⊘ Não alterado (decisão consciente) | Não existe endpoint `/health` dedicado porque o serviço usa `startStandaloneServer` do Apollo, que não expõe rotas customizadas sem trocar para `expressMiddleware` — uma mudança de servidor HTTP, não um fix trivial. O 400 em GET é comportamento padrão do Apollo (proteção CSRF), não um bug. Não alterado. |
 
 ## Itens não verificáveis
 
@@ -91,7 +96,7 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 ### Bloco 3: Segurança e LGPD
 1. Pseudonimização via `crypto.randomBytes`, não derivada de PII? ✅ — `patients-service/src/pacientes.js`.
 2. AES-256-GCM, IV 12 bytes aleatório, `setAuthTag` correto? ✅ — `patients-service/src/cripto.js`; confirmado também inspecionando documento real no MongoDB (`nome_cifrado`/`cpf_cifrado` com `iv`/`tag`/`ct`, nunca em claro).
-3. PII em logs? ⚠️ — apenas senha em claro em script offline de geração de hash (ver não-críticos).
+3. PII em logs? ✅ (corrigido) — senha em claro em script offline de geração de hash, removida (ver "Correções aplicadas").
 4. JWT: `algorithms: ["HS256"]` explícito + `issuer` validado + secret do env? ✅ — `api-gateway/src/auth.js`.
 5. Anti-enumeração no login (bcrypt dummy)? ✅ — confirmado no código e por inspeção do tempo de resposta do fluxo.
 6. RBAC — reidentificação exige exclusivamente `medico`? ✅ — confirmado no código **e em execução real** (enfermeiro recebeu 403).
@@ -99,7 +104,7 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 8. Fail-closed na reidentificação (auditoria antes da PII, exceção se falhar)? ✅ — confirmado no código **e em execução real**: com `audit-service` derrubado, a reidentificação retornou 500 sem PII.
 9. Hash chain (`corpo + hashAnterior`, `verificarCadeia`)? ✅ — `audit-service/src/hash-chain.js`; confirmado em execução (`/eventos/verificar` → `integridade: "ok"`).
 10. WORM lógico (sem DELETE/PUT/PATCH em `/eventos`)? ✅ — apenas GET e POST declarados em `audit-service/src/servidor.js`.
-11. Mutex de gravação serializa inserções? ⚠️ — funciona corretamente para uma instância (confirmado no código); frágil em múltiplas réplicas (documentado no próprio código como limitação aceita).
+11. Mutex de gravação serializa inserções? ⚠️ (mantido, decisão consciente) — funciona corretamente para uma instância (confirmado no código); frágil em múltiplas réplicas. Corrigir exigiria mutex distribuído (mudança de arquitetura), não um fix seguro — mantido como limitação documentada, aceitável para o MVP.
 12. `POST /eventos` exige `X-Audit-Token`? ✅ — confirmado no código.
 13. Headers `X-User-*` vêm do JWT, não do body? ✅ — `api-gateway/src/proxy.js`.
 14. `patients-service` prioriza `x-user-login` sobre `body.solicitante`? ✅ — confirmado no código; em execução, o evento de auditoria registrou corretamente `solicitante: "dr.silva"` (originado do JWT, não do body).
@@ -111,7 +116,7 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 ### Bloco 5: Integrações entre serviços
 1. `ingestion-service` assina `hospital/uti/+/+`? ✅
 2. `alerts-service` assina o mesmo padrão? ✅
-3. Scripts simuladores publicam em tópicos/tipos coerentes com o consumido? ❌ — ver "Problemas críticos" (conflito `pas`/`pad`).
+3. Scripts simuladores publicam em tópicos/tipos coerentes com o consumido? ✅ (corrigido) — havia conflito `pas`/`pad` no `alerts-service` (ver "Problema crítico identificado e corrigido"); removido e revalidado em execução real.
 4. `query-service` usa `PATIENTS_URL` (default 8082)? ✅
 5. `reidentifyPatient` apenas intermedia, sem `PII_ENCRYPTION_KEY` no `query-service`? ✅ — confirmado no código e no `.env`.
 6. Dashboard usa `VITE_GATEWAY_URL`/`VITE_ALERTS_WS_URL`? ✅
@@ -121,13 +126,13 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 ### Bloco 6: Qualidade de código
 1. `console.log` de debug esquecido? ✅ — nenhum encontrado; todos os logs são operacionais.
 2. TODO/FIXME? ✅ — nenhum encontrado.
-3. Código morto? ⚠️ — `__setCollectionForTest` exportada e não usada em 4 serviços (indício de testes não versionados).
+3. Código morto? ⚠️ (mantido, decisão consciente) — `__setCollectionForTest` exportada e não usada em 4 serviços. Avaliado e mantido: é um hook de teste documentado, não código morto acidental (ver "Correções aplicadas").
 4. Comentários "mentindo"? ✅ — nenhuma divergência encontrada entre comentário e implementação.
 5. Consistência de nomenclatura (PT domínio / EN técnico)? ✅ — consistente em todo o projeto.
 
 ### Bloco 7: Funcional (executado de fato)
 1. `start-all` sobe sem erro? ⚠️→✅ após correção — havia bug que impedia a subida sem Docker (corrigido). Após a correção, todos os 7 processos (broker MQTT Aedes, 6 serviços Node, dashboard Vite) subiram e todas as 7 portas (1883/8080-8084/8090) ficaram ativas.
-2. `GET /health` retorna 200? ✅ (gateway, patients, audit) / ⊘ (query-service não tem rota dedicada — ver não-críticos).
+2. `GET /health` retorna 200? ✅ (gateway, patients, audit) / ⚠️ (mantido, decisão consciente) — query-service não tem rota dedicada por limitação do `startStandaloneServer` do Apollo (ver não-críticos); o 400 retornado é comportamento padrão da biblioteca, não um bug.
 3. Login via Gateway retorna token? ✅ — testado com `dr.silva`/`DemoMedico@2026`.
 4. Listar pacientes via GraphQL com token? ✅ — 10 pacientes retornados.
 5. PII não aparece em claro no Mongo? ✅ — confirmado inspecionando documento real (`nome_cifrado`/`cpf_cifrado`).
@@ -140,7 +145,7 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 12. Login no dashboard + WebSocket conecta? ✅ (verificado end-to-end, reproduzindo o código real do dashboard) — escrevi um script Node que repete exatamente o que `api.js`/`Alertas.jsx` fazem: (a) `POST /auth/login` com as credenciais demo → token recebido; (b) `POST /api/graphql` com o token → 10 pacientes recebidos; (c) abriu um `WebSocket` real para `ws://localhost:8081` (mesma URL e mesmo parsing `{tipo:"alerta", payload:{...}}` do componente `Alertas.jsx`); (d) publiquei os 5 sinais vitais via MQTT necessários para o NEWS2; (e) **o alerta chegou pelo WebSocket** com o payload exato que o componente React renderiza: `{"pseudonimo":"PAC-9c6dd1","risco":"alto","scoreTotal":14,...}`. Esse é o nível de verificação mais próximo possível de "abrir no navegador" sem um navegador disponível.
 
 ### Bloco 8: Defesa LGPD/ISO 27001 — documental
-1. README raiz explica arquitetura geral? ⚠️ — apenas título, sem diagrama/portas/fluxo.
+1. README raiz explica arquitetura geral? ✅ (corrigido) — reescrito com diagrama, tabela de serviços/portas e fluxo de dados.
 2. Cada serviço tem README com decisões de design? ✅ — 7/8 muito bons a excelentes (`patients-service` e `audit-service` se destacam); `mqtt-broker` estava ausente, corrigido com README mínimo.
 3. Decisões de segurança rastreáveis no código (comentários "por quê")? ✅ — excelente: comentários justificam AES-GCM vs. alternativas, motivo do IV aleatório, fail-closed, anti-enumeração, limitações assumidas do mutex em memória, citando inclusive artigos da LGPD.
 
@@ -154,7 +159,7 @@ Nenhum. Os 2 itens do Bloco 7 que originalmente exigiriam um navegador real (aus
 
 ## Pontos de atenção para a banca
 
-1. **O bug de `pas`/`pad`** (ver "Problemas críticos") pode ser questionado diretamente — tenha uma resposta pronta: é um bug real de mapeamento de tipos, não afeta a pontuação NEWS2 neste momento por acidente de ordenação, e a correção é simples (não mapear `pad` para o canônico de sistólica).
-2. **Mutex de auditoria em memória**: se perguntado sobre escalabilidade horizontal do `audit-service`, reconheça a limitação (já documentada no próprio código) e cite a solução proposta (transações Mongo ou fila distribuída).
-3. **README raiz minimalista**: se a banca pedir uma visão geral do sistema, tenha um diagrama de arquitetura pronto para apresentar verbalmente, já que o README da raiz não o contém.
-4. **Ausência de testes automatizados versionados**: a função `__setCollectionForTest` sugere que testes existiram em algum momento; esteja preparado para explicar a estratégia de testes do projeto (manual via scripts, ou suíte não commitada).
+1. **O bug de `pas`/`pad` já foi corrigido nesta auditoria** — se questionado, explique que existia um bug real de mapeamento de tipos (diastólica competindo com sistólica no NEWS2), identificado e corrigido com revalidação em execução real (publicação MQTT de `pas` seguido de `pad`, confirmando que a diastólica deixou de ser contabilizada). É um bom exemplo de processo de revisão funcionando.
+2. **Mutex de auditoria em memória**: se perguntado sobre escalabilidade horizontal do `audit-service`, reconheça a limitação (já documentada no próprio código, e mantida deliberadamente nesta auditoria por exigir mudança de arquitetura) e cite a solução proposta (transações Mongo ou fila distribuída).
+3. **Ausência de testes automatizados versionados**: a função `__setCollectionForTest` sugere que testes existiram em algum momento; esteja preparado para explicar a estratégia de testes do projeto (manual via scripts, ou suíte não commitada). Foi mantida deliberadamente por ser um hook de teste intencional, não código morto.
+4. **query-service sem `/health` dedicado**: se perguntado, explique que é uma limitação do `startStandaloneServer` do Apollo (não expõe rotas customizadas sem trocar para `expressMiddleware`), não um descuido — o 400 em GET é o comportamento padrão de proteção CSRF da biblioteca.

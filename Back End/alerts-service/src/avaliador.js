@@ -22,8 +22,10 @@ const TIPO_CANONICO = {
   fc: "freq_cardiaca",
   freq_cardiaca: "freq_cardiaca",
   pas: "pressao_sistolica",
-  pad: "pressao_sistolica",
   pressao_sistolica: "pressao_sistolica",
+  // "pad" (pressão diastólica) NÃO entra aqui: o NEWS2 oficial pontua apenas
+  // a sistólica. Mapeá-la para "pressao_sistolica" faria leituras de
+  // diastólica competirem com a sistólica pelo mesmo slot do snapshot.
   spo2: "spo2",
   temperatura: "temperatura",
 };

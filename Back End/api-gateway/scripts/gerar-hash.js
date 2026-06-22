@@ -27,7 +27,7 @@ const saida = [];
 for (const u of USUARIOS_DEMO) {
   const hash = await bcrypt.hash(u.senha, ROUNDS);
   saida.push({ login: u.login, hash, role: u.role, nome: u.nome });
-  console.log(`${u.login.padEnd(12)} senha=${u.senha}`);
+  console.log(`${u.login.padEnd(12)} hash gerado (senha em USUARIOS_DEMO, não impressa)`);
 }
 
 console.log("\n=========================================================");
