@@ -18,15 +18,10 @@ const nomes = [
   'César Henrique Soares',
   'Gustavo Villar Teragi',
   'Henrique Assao',
-  'Victoria Silva Gonçalves',
-  'Mariana Costa',
-  'Lucas Pereira',
-  'Beatriz Oliveira',
-  'Rafael Souza',
 ];
 
 async function main() {
-  console.log('Iniciando seed de pacientes (10)...');
+  console.log(`Iniciando seed de pacientes (${nomes.length})...`);
   await repo.inicializar();
   for (let i = 0; i < nomes.length; i++) {
     const nome = nomes[i];
