@@ -23,6 +23,7 @@ let client;
 let totalRecebidas = 0;
 let totalAvaliadas = 0;
 let totalAlertasEmitidos = 0;
+let fallbackInterval;
 
 export function iniciar(collection, motor) {
   console.log(`[MQTT] Conectando em ${MQTT.url}...`);
@@ -44,6 +45,30 @@ export function iniciar(collection, motor) {
   client.on("reconnect", () => console.log("[MQTT] Reconectando..."));
   client.on("error", (err) => console.error("[MQTT] Erro:", err.message));
 
+  // Fallback polling: se o MQTT ficar indisponível, periodicamente
+  // varremos pacientes com leituras recentes e forçamos avaliação
+  // local para que o motor de alertas seja acionado (websocket/logger).
+  fallbackInterval = setInterval(async () => {
+    try {
+      if (client && client.connected) return; // MQTT ok — não poluir
+      const desde = new Date(Date.now() - 60_000);
+      // pega pseudônimos que tiveram alguma leitura na última janela
+      const pseudonimos = await collection.distinct('metadata.pseudonimo', { timestamp: { $gte: desde } });
+      for (const p of pseudonimos) {
+        try {
+          // sinal mínimo só com pseudonimo — avaliador usa apenas isso
+          await avaliar(collection, motor, { pseudonimo: p });
+        } catch (e) {
+          console.error('[FALLBACK] erro ao avaliar', p, e.message);
+        }
+      }
+    } catch (e) {
+      // não fatal — vamos tentar na próxima vez
+      // log reduzido para não poluir demais
+      console.debug('[FALLBACK] polling error:', e.message);
+    }
+  }, 5000);
+
   client.on("message", async (topico, payload) => {
     totalRecebidas++;
 
@@ -62,9 +87,16 @@ export function iniciar(collection, motor) {
 
     try {
       const resultado = await avaliar(collection, motor, sinal);
-      if (resultado.calculado) {
-        totalAvaliadas++;
-        if (resultado.emitido) totalAlertasEmitidos++;
+      if (!resultado.calculado) {
+        console.warn("[ALERTAS] avaliação incompleta:", resultado.motivo, sinal.pseudonimo);
+        return;
+      }
+
+      totalAvaliadas++;
+      if (resultado.emitido) {
+        totalAlertasEmitidos++;
+      } else {
+        console.debug("[ALERTAS] avaliado sem alerta:", resultado.risco, "score", resultado.scoreTotal, sinal.pseudonimo);
       }
     } catch (e) {
       console.error("[ALERTAS] erro ao avaliar:", e.message);
@@ -81,6 +113,7 @@ export function encerrar() {
     if (!client) return resolve();
     client.end(false, {}, () => {
       console.log("[MQTT] Conexão encerrada.");
+      if (fallbackInterval) clearInterval(fallbackInterval);
       resolve();
     });
   });

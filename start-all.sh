@@ -25,18 +25,31 @@ echo "==============================================="
 echo "  UTI Monitor - Subindo o sistema completo"
 echo "==============================================="
 
-# ─── 1) Mosquitto (broker MQTT) ─────────────────────────────────────────────
+# ─── 1) Broker MQTT ───────────────────────────────────────────────────────
 echo ""
-echo "[1/7] Mosquitto (broker MQTT)..."
-if ! docker ps --format '{{.Names}}' | grep -q "^mosquitto$"; then
-  if docker ps -a --format '{{.Names}}' | grep -q "^mosquitto$"; then
-    docker start mosquitto > /dev/null
-  else
-    docker run -d --name mosquitto -p 1883:1883 eclipse-mosquitto > /dev/null
+echo "[1/7] Broker MQTT..."
+if command -v docker >/dev/null 2>&1; then
+  if ! docker ps --format '{{.Names}}' | grep -q "^mosquitto$"; then
+    if docker ps -a --format '{{.Names}}' | grep -q "^mosquitto$"; then
+      docker start mosquitto > /dev/null
+    else
+      docker run -d --name mosquitto -p 1883:1883 eclipse-mosquitto > /dev/null
+    fi
+    sleep 2
   fi
-  sleep 2
+  echo "      ✓ Mosquitto em 1883"
+else
+  echo "      ! Docker não encontrado. Tentando broker local Node..."
+  cd "$PROJETO_DIR/Back End/mqtt-broker"
+  if [ ! -d node_modules ]; then
+    echo "      ! node_modules não encontrado em Back End/mqtt-broker — rode 'npm install' primeiro"
+    exit 1
+  fi
+  npm start > "$LOG_DIR/mqtt-broker.log" 2>&1 &
+  local pid=$!
+  echo "      ✓ Broker local em 1883 (PID $pid)"
+  cd "$PROJETO_DIR"
 fi
-echo "      ✓ Mosquitto em 1883"
 
 # Função para subir um serviço Node em background
 start_servico() {

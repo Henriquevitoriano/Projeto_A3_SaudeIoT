@@ -16,6 +16,18 @@
 import { calcularNEWS2 } from "./news2.js";
 
 const TIPOS_NEWS2 = ["respiracao", "spo2", "pressao_sistolica", "freq_cardiaca", "temperatura"];
+const TIPO_CANONICO = {
+  resp: "respiracao",
+  respiracao: "respiracao",
+  fc: "freq_cardiaca",
+  freq_cardiaca: "freq_cardiaca",
+  pas: "pressao_sistolica",
+  pad: "pressao_sistolica",
+  pressao_sistolica: "pressao_sistolica",
+  spo2: "spo2",
+  temperatura: "temperatura",
+};
+const TIPOS_BUSCA = Object.keys(TIPO_CANONICO);
 const JANELA_MS = 60_000; // só consideramos leituras dos últimos 60s
 
 /**
@@ -33,7 +45,7 @@ async function buscarSnapshot(collection, pseudonimo) {
     { $match: {
         timestamp: { $gte: desde },
         "metadata.pseudonimo": pseudonimo,
-        "metadata.tipo": { $in: TIPOS_NEWS2 },
+        "metadata.tipo": { $in: TIPOS_BUSCA },
     } },
     { $sort: { timestamp: -1 } },
     { $group: {
@@ -45,12 +57,20 @@ async function buscarSnapshot(collection, pseudonimo) {
   ]);
 
   const docs = await cursor.toArray();
-  return docs.map((d) => ({
-    tipo: d._id,
-    valor: d.valor,
-    unidade: d.unidade,
-    timestamp: d.timestamp,
-  }));
+  const snapshot = new Map();
+  for (const d of docs) {
+    const tipoCanonico = TIPO_CANONICO[d._id];
+    if (!tipoCanonico) continue;
+    if (snapshot.has(tipoCanonico)) continue;
+    snapshot.set(tipoCanonico, {
+      tipo: tipoCanonico,
+      valor: d.valor,
+      unidade: d.unidade,
+      timestamp: d.timestamp,
+    });
+  }
+
+  return Array.from(snapshot.values());
 }
 
 /**
