@@ -1,0 +1,12 @@
+/c/Program Files/nodejs/npm: line 10: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: [: =: unary operator expected
+
+> uti-query-service@1.0.0 start
+> node src/index.js
+
+=== Serviço de Consulta (GraphQL) - UTI ===
+
+[MONGO] Conectando ao Atlas...
+[MONGO] Conectado.
+[GRAPHQL] Apollo Server pronto em http://localhost:8083/

@@ -1,0 +1,16 @@
+/c/Program Files/nodejs/npm: line 10: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: [: =: unary operator expected
+
+> uti-api-gateway@1.0.0 start
+> node src/index.js
+
+=== API Gateway - UTI ===
+
+Usuários carregados: 3
+  - dr.silva     (medico)
+  - enf.santos   (enfermeiro)
+  - dpo.admin    (dpo)
+
+[GW] API Gateway ouvindo na porta 8080
+[GW] POST /api/graphql -> http://localhost:8083/ (user=dr.silva role=medico)

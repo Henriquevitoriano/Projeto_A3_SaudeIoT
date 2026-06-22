@@ -1,0 +1,16 @@
+{
+  "name": "uti-query-service",
+  "version": "1.0.0",
+  "description": "Servico de Consulta - GraphQL para dashboard (sinais vitais + NEWS2 + pacientes)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.3",
+    "graphql": "^16.9.0",
+    "mongodb": "^6.20.0",
+    "dotenv": "^17.2.3"
+  }
+}

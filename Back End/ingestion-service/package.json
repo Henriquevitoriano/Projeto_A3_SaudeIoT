@@ -1,0 +1,16 @@
+{
+  "name": "uti-ingestion-service",
+  "version": "1.0.0",
+  "description": "Servico de Ingestao - consome sinais vitais via MQTT e grava no MongoDB (com Circuit Breaker)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongodb": "^6.20.0",
+    "mqtt": "^5.15.1",
+    "opossum": "^9.0.0"
+  }
+}

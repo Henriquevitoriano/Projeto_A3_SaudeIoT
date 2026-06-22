@@ -1,0 +1,14 @@
+{
+  "name": "uti-audit-service",
+  "version": "1.0.0",
+  "description": "Servico de Auditoria Imutavel - hash chain + WORM (LGPD Art. 37)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.20.0",
+    "dotenv": "^17.2.3"
+  }
+}

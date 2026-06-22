@@ -1,0 +1,12 @@
+/c/Program Files/nodejs/npm: line 10: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: [: =: unary operator expected
+
+> uti-audit-service@1.0.0 start
+> node src/index.js
+
+=== Audit Service (auditoria imutável) - UTI ===
+
+[MONGO] Conectando ao Atlas (banco de auditoria)...
+[MONGO] Coleção 'uti_auditoria.eventos' pronta.
+[AUDIT] Servidor REST ouvindo na porta 8084

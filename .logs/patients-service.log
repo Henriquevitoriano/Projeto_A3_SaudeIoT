@@ -1,0 +1,13 @@
+/c/Program Files/nodejs/npm: line 10: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: /usr/bin/uname: Permission denied
+/c/Program Files/nodejs/npm: line 14: [: =: unary operator expected
+
+> uti-patients-service@1.0.0 start
+> node src/index.js
+
+=== Serviço de Pacientes (PII) - UTI ===
+
+[MONGO] Conectando ao Atlas...
+[MONGO] Conectado.
+[MONGO] Coleção 'uti_pacientes.pacientes' pronta.
+[HTTP] Servidor REST ouvindo na porta 8082

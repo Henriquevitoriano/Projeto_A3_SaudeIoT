@@ -1,0 +1,253 @@
+/* -----------------------------------------------------------------------------
+   styles.css — UTI Monitor
+   Paleta sóbria (azul-marinho + branco) para contexto hospitalar.
+   Vermelho/amarelo/verde para sinais de risco (semântico).
+   ----------------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f4f6fa;
+  color: #1a2533;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────────────────────── */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  background: #0b3d66;
+  color: #fff;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.topbar h1 { margin: 0; font-size: 18px; font-weight: 600; }
+.topbar .user { font-size: 13px; opacity: .85; }
+.topbar button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.4);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-left: 12px;
+}
+.topbar button:hover { background: rgba(255,255,255,.1); }
+
+main { padding: 24px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+/* ─── LOGIN ──────────────────────────────────────────────────────────────── */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0b3d66 0%, #1a5a8f 100%);
+}
+.login-card {
+  background: #fff;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.2);
+  width: 360px;
+}
+.login-card h2 { margin: 0 0 4px 0; color: #0b3d66; }
+.login-card .subtitle { color: #5b6b7b; font-size: 13px; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; margin-bottom: 4px; color: #3a4a5e; }
+.form-group input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.form-group input:focus { border-color: #0b3d66; outline: none; }
+
+button.primary {
+  width: 100%;
+  background: #0b3d66;
+  color: #fff;
+  border: none;
+  padding: 11px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+}
+button.primary:hover { background: #154a7a; }
+button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.erro {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #b00;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* ─── PÁGINA DE PACIENTES ────────────────────────────────────────────────── */
+.layout-2col {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .layout-2col { grid-template-columns: 1fr; }
+}
+
+.section-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #5b6b7b;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.pacientes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.paciente-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  border-left: 6px solid #cbd5e0;
+  transition: transform .15s, box-shadow .15s;
+}
+.paciente-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); transform: translateY(-1px); }
+.paciente-card.risco-alto    { border-left-color: #dc2626; }
+.paciente-card.risco-medio   { border-left-color: #f59e0b; }
+.paciente-card.risco-baixo   { border-left-color: #10b981; }
+.paciente-card.risco-indeterminado { border-left-color: #94a3b8; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.card-leito { font-size: 20px; font-weight: 700; color: #1a2533; }
+.card-pseudo { font-size: 11px; color: #94a3b8; font-family: monospace; }
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge.alto  { background: #fee2e2; color: #b91c1c; }
+.badge.medio { background: #fef3c7; color: #b45309; }
+.badge.baixo { background: #d1fae5; color: #065f46; }
+.badge.indeterminado { background: #f1f5f9; color: #64748b; }
+
+.score-box {
+  background: #f8fafc;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.score-box .num { font-size: 22px; font-weight: 700; }
+.score-box.alto  .num { color: #b91c1c; }
+.score-box.medio .num { color: #b45309; }
+.score-box.baixo .num { color: #065f46; }
+
+.detalhes-mini { font-size: 11px; color: #64748b; margin-top: 4px; }
+.detalhes-mini span { margin-right: 8px; }
+
+.btn-reid {
+  width: 100%;
+  margin-top: 8px;
+  background: #fff;
+  color: #0b3d66;
+  border: 1px solid #0b3d66;
+  padding: 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-reid:hover { background: #0b3d66; color: #fff; }
+
+/* ─── PAINEL DE ALERTAS ──────────────────────────────────────────────────── */
+.alertas-panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.alertas-panel .conexao { font-size: 11px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; }
+.alertas-panel .conexao.on  { color: #065f46; }
+.alertas-panel .conexao.off { color: #b91c1c; }
+
+.alerta-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 4px solid;
+  font-size: 13px;
+  background: #f8fafc;
+}
+.alerta-item.alto  { border-left-color: #dc2626; background: #fef2f2; }
+.alerta-item.medio { border-left-color: #f59e0b; background: #fffbeb; }
+.alerta-item .pseudo { font-family: monospace; font-weight: 700; }
+.alerta-item .meta   { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+.vazio { color: #94a3b8; font-size: 13px; text-align: center; padding: 24px 0; }
+
+/* ─── MODAL REIDENTIFICAR ────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,61,102,.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.modal {
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  width: 420px;
+  max-width: 90vw;
+}
+.modal h3 { margin: 0 0 4px 0; }
+.modal .aviso {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  padding: 10px;
+  font-size: 12px;
+  margin: 12px 0;
+  border-radius: 4px;
+}
+.modal .pii-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.modal .botoes { display: flex; gap: 8px; margin-top: 16px; }
+.modal .botoes button { flex: 1; }
+.btn-secundario {
+  background: #fff; color: #5b6b7b; border: 1px solid #cbd5e0;
+  padding: 9px; border-radius: 4px; cursor: pointer; font-size: 14px;
+}
