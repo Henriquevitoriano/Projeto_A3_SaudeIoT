@@ -46,8 +46,8 @@ else
     exit 1
   fi
   npm start > "$LOG_DIR/mqtt-broker.log" 2>&1 &
-  local pid=$!
-  echo "      ✓ Broker local em 1883 (PID $pid)"
+  mqtt_broker_pid=$!
+  echo "      ✓ Broker local em 1883 (PID $mqtt_broker_pid)"
   cd "$PROJETO_DIR"
 fi
 
