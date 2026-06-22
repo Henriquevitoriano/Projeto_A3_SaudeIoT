@@ -1,0 +1,18 @@
+[GEN-C] Inicializando gerador contínuo...
+[GEN-C] Conectado ao MQTT. Pacientes: 5 - publicando todos os sinais a cada 5000 ms
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (1 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (2 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (3 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (4 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (4 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (3 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (2 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (1 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)
+[GEN-C] tick: 5 pacientes publicados (0 em estado crítico)

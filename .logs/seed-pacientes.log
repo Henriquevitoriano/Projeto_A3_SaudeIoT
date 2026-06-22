@@ -1,0 +1,5 @@
+[MONGO] Conectando ao Atlas...
+[MONGO] Conectado.
+[MONGO] Coleção 'uti_pacientes.pacientes' pronta.
+Seed pulado: já existem 5 paciente(s) cadastrado(s).
+[MONGO] Conexão encerrada.
