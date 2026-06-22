@@ -48,8 +48,12 @@ $logPath = Join-Path $repo '.logs\dashboard.log'
 $errLogPath = Join-Path $repo '.logs\dashboard-err.log'
 Start-Process -FilePath npm.cmd -ArgumentList @('run', 'dev') -WorkingDirectory (Join-Path $repo 'Front End\dashboard') -WindowStyle Hidden -RedirectStandardOutput $logPath -RedirectStandardError $errLogPath
 
+Write-Host "Garantindo que ha pacientes cadastrados (seed idempotente)..."
+$seedLog = Join-Path $repo '.logs\seed-pacientes.log'
+$seedErrLog = Join-Path $repo '.logs\seed-pacientes-err.log'
+Start-Process -FilePath node.exe -ArgumentList @('scripts\seed-pacientes.js') -WorkingDirectory (Join-Path $repo 'Back End\patients-service') -WindowStyle Hidden -RedirectStandardOutput $seedLog -RedirectStandardError $seedErrLog -Wait
+
 Write-Host "Starting gerador de sinais vitais (dados de demo para o dashboard)..."
-Write-Host "  (se a colecao de pacientes estiver vazia, rode antes: node `"Back End\patients-service\scripts\seed-pacientes.js`")"
 $logPath = Join-Path $repo '.logs\gerador-sinais.log'
 $errLogPath = Join-Path $repo '.logs\gerador-sinais-err.log'
 Start-Process -FilePath node.exe -ArgumentList @('scripts\generate-sinais-continuous.js') -WorkingDirectory (Join-Path $repo 'Back End\ingestion-service') -WindowStyle Hidden -RedirectStandardOutput $logPath -RedirectStandardError $errLogPath

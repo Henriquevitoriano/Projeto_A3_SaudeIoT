@@ -21,8 +21,19 @@ const nomes = [
 ];
 
 async function main() {
-  console.log(`Iniciando seed de pacientes (${nomes.length})...`);
   await repo.inicializar();
+
+  // Idempotente: se já existem pacientes, não duplica. Isso permite chamar
+  // este script sempre que o sistema sobe (via start-all), sem precisar de
+  // um passo manual nem risco de acumular pacientes repetidos a cada start.
+  const existentes = await repo.listar();
+  if (existentes.length > 0) {
+    console.log(`Seed pulado: já existem ${existentes.length} paciente(s) cadastrado(s).`);
+    await repo.encerrar();
+    process.exit(0);
+  }
+
+  console.log(`Iniciando seed de pacientes (${nomes.length})...`);
   for (let i = 0; i < nomes.length; i++) {
     const nome = nomes[i];
     const cpf = gerarCPF();
