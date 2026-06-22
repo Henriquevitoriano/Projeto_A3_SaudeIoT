@@ -100,6 +100,20 @@ npm run dev > "$LOG_DIR/dashboard.log" 2>&1 &
 echo "      ✓ PID $! em :8090"
 cd "$PROJETO_DIR"
 
+# ─── 8) Gerador contínuo de sinais vitais (demo) ───────────────────────────
+# Popula o MongoDB com sinais simulados a cada 5s, para o dashboard mostrar
+# dados reais sem precisar de um IoT/MQTT real. Não é fatal se falhar (ex:
+# ainda não rodou o seed de pacientes) — por isso vai em background, sem
+# checar o exit code.
+echo ""
+echo "[gerador-sinais] Iniciando (dados de demo para o dashboard)..."
+cd "$PROJETO_DIR/Back End/ingestion-service"
+node scripts/generate-sinais-continuous.js > "$LOG_DIR/gerador-sinais.log" 2>&1 &
+echo "      ✓ PID $! (logs: $LOG_DIR/gerador-sinais.log)"
+echo "      ! Se a coleção de pacientes estiver vazia, rode primeiro:"
+echo "        node \"Back End/patients-service/scripts/seed-pacientes.js\""
+cd "$PROJETO_DIR"
+
 echo ""
 echo "==============================================="
 echo "  Sistema no ar:"

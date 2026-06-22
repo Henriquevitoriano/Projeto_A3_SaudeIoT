@@ -14,6 +14,12 @@ if ($connections) {
     }
 }
 
+# O gerador de sinais não escuta porta nenhuma, então o cleanup acima não o
+# pega — sem isso, rodar start-all de novo acumularia geradores duplicados.
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like '*generate-sinais-continuous.js*' } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+
 Write-Host "Starting services..."
 New-Item -ItemType Directory -Path (Join-Path $repo '.logs') -Force | Out-Null
 $services = @(
@@ -41,6 +47,12 @@ Write-Host "Starting dashboard..."
 $logPath = Join-Path $repo '.logs\dashboard.log'
 $errLogPath = Join-Path $repo '.logs\dashboard-err.log'
 Start-Process -FilePath npm.cmd -ArgumentList @('run', 'dev') -WorkingDirectory (Join-Path $repo 'Front End\dashboard') -WindowStyle Hidden -RedirectStandardOutput $logPath -RedirectStandardError $errLogPath
+
+Write-Host "Starting gerador de sinais vitais (dados de demo para o dashboard)..."
+Write-Host "  (se a colecao de pacientes estiver vazia, rode antes: node `"Back End\patients-service\scripts\seed-pacientes.js`")"
+$logPath = Join-Path $repo '.logs\gerador-sinais.log'
+$errLogPath = Join-Path $repo '.logs\gerador-sinais-err.log'
+Start-Process -FilePath node.exe -ArgumentList @('scripts\generate-sinais-continuous.js') -WorkingDirectory (Join-Path $repo 'Back End\ingestion-service') -WindowStyle Hidden -RedirectStandardOutput $logPath -RedirectStandardError $errLogPath
 
 Start-Sleep -Seconds 5
 Write-Host "Service port status:"
