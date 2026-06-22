@@ -11,4 +11,4 @@ npm install
 npm start
 ```
 
-Porta padrão: `1883` (configurável via `MQTT_PORT` no `.env`, veja `.env.example`).
+Porta padrão: `1883` (configurável via `MQTT_PORTA` no `.env`, veja `.env.example`).

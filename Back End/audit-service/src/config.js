@@ -16,17 +16,15 @@
 import "dotenv/config";
 
 export const MONGO = {
-  // Idealmente uma URL de cluster separado. Para o MVP, reutilizamos
-  // MONGO_URL do projeto (banco lógico distinto).
-  url: process.env.MONGO_URL_AUDIT || process.env.MONGO_URL,
-  database: process.env.MONGO_DB_AUDIT || "uti_auditoria",
-  collection: process.env.MONGO_COLLECTION_AUDIT || "eventos",
+  // Idealmente uma URL de cluster separado (este serviço tem seu próprio
+  // .env, isolado dos demais — trocar aqui não afeta nenhum outro serviço).
+  url: process.env.MONGO_URL,
+  database: process.env.MONGO_DB || "uti_auditoria",
+  collection: process.env.MONGO_COLLECTION || "eventos",
 };
 
 if (!MONGO.url) {
-  throw new Error(
-    "MONGO_URL_AUDIT (ou MONGO_URL) não definida. Veja .env.example."
-  );
+  throw new Error("MONGO_URL não definida. Veja .env.example.");
 }
 
 export const HTTP = {

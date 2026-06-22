@@ -3,7 +3,7 @@ import net from 'node:net';
 
 const broker = aedes();
 const server = net.createServer(broker.handle);
-const PORT = Number(process.env.MQTT_PORT) || 1883;
+const PORT = Number(process.env.MQTT_PORTA) || 1883;
 
 server.listen(PORT, () => {
   console.log(`[MQTT BROKER] Aedes broker listening on port ${PORT}`);

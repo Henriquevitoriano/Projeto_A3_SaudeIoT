@@ -82,7 +82,7 @@ curl 'http://localhost:8084/eventos?pseudonimo=PAC-7f3a9b'
 ```bash
 npm install
 cp .env.example .env
-# Configure: MONGO_URL_AUDIT, AUDIT_SHARED_TOKEN
+# Configure: MONGO_URL, AUDIT_SHARED_TOKEN
 npm start
 ```
 

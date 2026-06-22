@@ -33,7 +33,8 @@ Idade aproximada (não data de nascimento) e sexo são "quase-identificadores"
 
 Banco `uti_pacientes` (PII) é distinto de `uti_monitor` (sinais). No MVP,
 ambos no mesmo cluster Atlas. Em produção, promove-se para cluster físico
-separado mudando só `MONGO_URL_PII` — zero alteração de código.
+separado mudando só `MONGO_URL` (deste serviço — cada serviço tem seu
+próprio `.env`, isolado dos demais) — zero alteração de código.
 
 ## API REST
 
@@ -77,7 +78,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # 3. Configurar .env
 cp .env.example .env
-# Cole a chave gerada e a MONGO_URL_PII
+# Cole a chave gerada e a MONGO_URL
 
 # 4. Rodar
 npm start
@@ -97,7 +98,7 @@ restrito ao banco `uti_pacientes`:
    - Database: `uti_pacientes` (apenas este!)
 5. Add User
 
-Use a connection string deste usuário em `MONGO_URL_PII`. Se ele vazar, o
+Use a connection string deste usuário em `MONGO_URL`. Se ele vazar, o
 incidente fica contido APENAS ao banco de PII — o de sinais permanece
 inacessível com essa credencial.
 
